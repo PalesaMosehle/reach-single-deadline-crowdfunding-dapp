@@ -6,11 +6,11 @@ import { renderDOM, renderView } from './views/render';
 import './index.css';
 import * as backend from './build/index.main.mjs';
 import { loadStdlib } from '@reach-sh/stdlib';
-// import MyAlgoConnect from '@reach-sh/stdlib/ALGO_MyAlgoConnect';
+import { ALGO_MyAlgoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 import { ALGO_WalletConnect as WalletConnect } from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
-// reach.setWalletFallback(reach.walletFallback({providerEnv: 'TestNet', MyAlgoConnect }));
-reach.setWalletFallback(reach.walletFallback({ providerEnv: 'TestNet', WalletConnect }));
+reach.setWalletFallback(reach.walletFallback({providerEnv: 'TestNet', MyAlgoConnect }));
+// reach.setWalletFallback(reach.walletFallback({ providerEnv: 'TestNet', WalletConnect }));
 // reach.setWalletFallback(reach.walletFallback({}));
 
 const actionToInt = { 'APRROVE': 0, 'WAIT': 1, 'DECLINE': 2 };
