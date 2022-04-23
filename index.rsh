@@ -3,16 +3,16 @@
 const [ isAction, APRROVE, WAIT, DECLINE ] = makeEnum(3);
 const [ isOutcome, YES, DRAW, NO ] = makeEnum(3);
 
-const outcomeAction = (FundraiserAction, FunderAction) =>
-  ((FundraiserAction + (4 - FunderAction)) % 3);
+const outcomeAction = (AdminAction, ClientAction) =>
+  ((AdminAction + (4 - ClientAction)) % 3);
 
 assert(outcomeAction(APRROVE, WAIT) == YES);
 assert(outcomeAction(WAIT, APRROVE) == NO);
 assert(outcomeAction(APRROVE, APRROVE) == DRAW);
 
-forall(UInt, FundraiserAction =>
-  forall(UInt, FunderAction =>
-    assert(isOutcome(outcomeAction(FundraiserAction, FunderAction)))));
+forall(UInt, AdminAction =>
+  forall(UInt, ClientAction =>
+    assert(isOutcome(outcomeAction(AdminAction, ClientAction)))));
 
 forall(UInt, (action) =>
   assert(outcomeAction(action, action) == DRAW));
