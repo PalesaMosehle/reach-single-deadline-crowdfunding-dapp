@@ -1,114 +1,100 @@
 'reach 0.1';
 
-const [ isAction, APRROVE, WAIT, DECLINE ] = makeEnum(3);
-const [ isOutcome, YES, DRAW, NO ] = makeEnum(3);
+const [ isHand, ROCK, PAPER, SCISSORS ] = makeEnum(3);
+const [ isOutcome, B_WINS, DRAW, A_WINS ] = makeEnum(3);
 
-const outcomeAction = (AdminAction, ClientAction) =>
-  ((AdminAction + (4 - ClientAction)) % 3);
+const winner = (handAlice, handBob) =>
+  ((handAlice + (4 - handBob)) % 3);
 
-assert(outcomeAction(APRROVE, WAIT) == YES);
-assert(outcomeAction(WAIT, APRROVE) == NO);
-assert(outcomeAction(APRROVE, APRROVE) == DRAW);
+assert(winner(ROCK, PAPER) == B_WINS);
+assert(winner(PAPER, ROCK) == A_WINS);
+assert(winner(ROCK, ROCK) == DRAW);
 
-forall(UInt, AdminAction =>
-  forall(UInt, ClientAction =>
-    assert(isOutcome(outcomeAction(AdminAction, ClientAction)))));
+forall(UInt, handAlice =>
+  forall(UInt, handBob =>
+    assert(isOutcome(winner(handAlice, handBob)))));
 
-forall(UInt, (action) =>
-  assert(outcomeAction(action, action) == DRAW));
+forall(UInt, (hand) =>
+  assert(winner(hand, hand) == DRAW));
 
-const User = {
+const Player = {
   ...hasRandom,
+  getHand: Fun([], UInt),
   seeOutcome: Fun([UInt], Null),
   informTimeout: Fun([], Null),
 };
 
 export const main = Reach.App(() => {
-  const Admin = Participant('Admin', {
-    ...User,
-    product: Object({premium: UInt, cover: UInt}), // atomic units of currency
-    deadline: UInt, // time delta (blocks/rounds),
-    activateCover: Fun([], UInt),
-    approveOrDeclineClaim: Fun([], UInt),
+  const Alice = Participant('Alice', {
+    ...Player,
+    wager: UInt, // atomic units of currency
+    deadline: UInt, // time delta (blocks/rounds)
   });
-  const Client = Participant('Client', {
-    ...User,
-    acceptAndBuyProduct: Fun([UInt, UInt], Null),
-    claim: Fun([], UInt),
+  const Bob   = Participant('Bob', {
+    ...Player,
+    acceptWager: Fun([UInt], Null),
   });
-  deploy();
+  init();
 
   const informTimeout = () => {
-    each([Admin, Client], () => {
+    each([Alice, Bob], () => {
       interact.informTimeout();
     });
   };
 
-  Admin.only(() => {
-    const {premium, cover} = declassify(interact.product);
+  Alice.only(() => {
+    const wager = declassify(interact.wager);
     const deadline = declassify(interact.deadline);
   });
-  Admin.publish(premium, cover, deadline)
-    .pay(cover);
+  Alice.publish(wager, deadline)
+    .pay(wager);
   commit();
 
-  Client.only(() => {
-    interact.acceptAndBuyProduct(premium, cover);
+  Bob.only(() => {
+    interact.acceptWager(wager);
   });
-  Client.pay(premium)
-    .timeout(relativeTime(deadline), () => closeTo(Admin, informTimeout));
-  transfer(premium).to(Admin);
+  Bob.pay(wager)
+    .timeout(relativeTime(deadline), () => closeTo(Alice, informTimeout));
 
   var outcome = DRAW;
-  invariant( balance() == cover && isOutcome(outcome) );
+  invariant( balance() == 2 * wager && isOutcome(outcome) );
   while ( outcome == DRAW ) {
     commit();
 
-    Admin.only(() => {
-      const _isCoverActivated = interact.activateCover();
-      const isCoverActivated = declassify(_isCoverActivated);
-      const [_commitAlice, _saltAlice] = makeCommitment(interact, _isCoverActivated);
+    Alice.only(() => {
+      const _handAlice = interact.getHand();
+      const [_commitAlice, _saltAlice] = makeCommitment(interact, _handAlice);
       const commitAlice = declassify(_commitAlice);
     });
-    Admin.publish(isCoverActivated, commitAlice)
-      .timeout(relativeTime(deadline), () => closeTo(Client, informTimeout));
-    if(isCoverActivated === DRAW){
-      outcome = DRAW;
-      continue;
-    }
-    if(isCoverActivated === NO){
-        commit();
-        Admin.pay(premium)
-          .timeout(relativeTime(deadline), () => closeTo(Admin, informTimeout));
-        transfer(premium).to(Client);
-        outcome = NO;
-        continue;
-    }
+    Alice.publish(commitAlice)
+      .timeout(relativeTime(deadline), () => closeTo(Bob, informTimeout));
     commit();
 
-    Client.only(() => {
-      const isClaimed = declassify(interact.claim());
+    unknowable(Bob, Alice(_handAlice, _saltAlice));
+    Bob.only(() => {
+      const handBob = declassify(interact.getHand());
     });
-    Client.publish(isClaimed)
-      .timeout(relativeTime(deadline), () => closeTo(Admin, informTimeout));
+    Bob.publish(handBob)
+      .timeout(relativeTime(deadline), () => closeTo(Alice, informTimeout));
     commit();
 
-    Admin.only(() => {
-      const isClaimApproved = declassify(interact.approveOrDeclineClaim());
+    Alice.only(() => {
+      const saltAlice = declassify(_saltAlice);
+      const handAlice = declassify(_handAlice);
     });
+    Alice.publish(saltAlice, handAlice)
+      .timeout(relativeTime(deadline), () => closeTo(Bob, informTimeout));
+    checkCommitment(commitAlice, saltAlice, handAlice);
 
-    Admin.publish(isClaimApproved)
-      .timeout(relativeTime(deadline), () => closeTo(Client, informTimeout));
-
-    outcome = outcomeAction(isClaimApproved, isClaimed);
+    outcome = winner(handAlice, handBob);
     continue;
   }
 
-  assert(outcome == NO || outcome == YES);
-  transfer(cover).to(outcome == NO ? Admin : Client);
+  assert(outcome == A_WINS || outcome == B_WINS);
+  transfer(2 * wager).to(outcome == A_WINS ? Alice : Bob);
   commit();
 
-  each([Admin, Client], () => {
+  each([Alice, Bob], () => {
     interact.seeOutcome(outcome);
   });
 });

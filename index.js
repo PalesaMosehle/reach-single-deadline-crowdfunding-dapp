@@ -1,137 +1,98 @@
 import React from 'react';
 import AppViews from './views/AppViews';
-import AdminViews from './views/AdminViews';
-import ClientViews from './views/ClientViews';
-import { renderDOM, renderView } from './views/render';
+import DeployerViews from './views/DeployerViews';
+import AttacherViews from './views/AttacherViews';
+import {renderDOM, renderView} from './views/render';
 import './index.css';
 import * as backend from './build/index.main.mjs';
-import { loadStdlib } from '@reach-sh/stdlib';
-import { ALGO_MyAlgoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
-import { ALGO_WalletConnect as WalletConnect } from '@reach-sh/stdlib';
+import {loadStdlib} from '@reach-sh/stdlib';
 const reach = loadStdlib(process.env);
+import { ALGO_MyAlgoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 reach.setWalletFallback(reach.walletFallback({providerEnv: 'TestNet', MyAlgoConnect }));
-// reach.setWalletFallback(reach.walletFallback({ providerEnv: 'TestNet', WalletConnect }));
-// reach.setWalletFallback(reach.walletFallback({}));
 
-const actionToInt = { 'APRROVE': 0, 'WAIT': 1, 'DECLINE': 2 };
-const intToOutcome = ['The claim has been approved', 'Claim Hanging!', 'The cover/claim was declined'];
-const { standardUnit } = reach;
-const defaults = {
-  defaultFundAmt: '10',
-  defaultProduct: {
-    premium: 100,
-    cover: 15000
-  },
-  standardUnit
-};
+const handToInt = {'ROCK': 0, 'PAPER': 1, 'SCISSORS': 2};
+const intToOutcome = ['Bob wins!', 'Draw!', 'Alice wins!'];
+const {standardUnit} = reach;
+const defaults = {defaultFundAmt: '10', defaultWager: '3', standardUnit};
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { view: 'ConnectAccount', ...defaults };
+    this.state = {view: 'ConnectAccount', ...defaults};
   }
   async componentDidMount() {
     const acc = await reach.getDefaultAccount();
     const balAtomic = await reach.balanceOf(acc);
     const bal = reach.formatCurrency(balAtomic, 4);
-    this.setState({ acc, bal });
+    this.setState({acc, bal});
     if (await reach.canFundFromFaucet()) {
-      this.setState({ view: 'FundAccount' });
+      this.setState({view: 'FundAccount'});
     } else {
-      this.setState({ view: 'AdminOrClient' });
+      this.setState({view: 'DeployerOrAttacher'});
     }
   }
   async fundAccount(fundAmount) {
     await reach.fundFromFaucet(this.state.acc, reach.parseCurrency(fundAmount));
-    this.setState({ view: 'AdminOrClient' });
+    this.setState({view: 'DeployerOrAttacher'});
   }
-  async skipFundAccount() {
-    this.setState({ view: 'AdminOrClient' });
-  }
-  selectClient() { this.setState({ view: 'Wrapper', ContentView: Client }); }
-  selectAdmin() { this.setState({ view: 'Wrapper', ContentView: Admin }); }
+  async skipFundAccount() { this.setState({view: 'DeployerOrAttacher'}); }
+  selectAttacher() { this.setState({view: 'Wrapper', ContentView: Attacher}); }
+  selectDeployer() { this.setState({view: 'Wrapper', ContentView: Deployer}); }
   render() { return renderView(this, AppViews); }
 }
 
-class User extends React.Component {
+class Player extends React.Component {
   random() { return reach.hasRandom.random(); }
-  seeOutcome(i) { this.setState({ view: 'Done', outcome: intToOutcome[i] }); }
-  informTimeout() { this.setState({ view: 'Timeout' }); }
-  takeAction(action) { this.state.resolveActionP(action); }
+  async getHand() { // Fun([], UInt)
+    const hand = await new Promise(resolveHandP => {
+      this.setState({view: 'GetHand', playable: true, resolveHandP});
+    });
+    this.setState({view: 'WaitingForResults', hand});
+    return handToInt[hand];
+  }
+  seeOutcome(i) { this.setState({view: 'Done', outcome: intToOutcome[i]}); }
+  informTimeout() { this.setState({view: 'Timeout'}); }
+  playHand(hand) { this.state.resolveHandP(hand); }
 }
 
-class Admin extends User {
+class Deployer extends Player {
   constructor(props) {
     super(props);
-    this.state = { view: 'CreateProduct' };
+    this.state = {view: 'SetWager'};
   }
-  createProduct(product) {
-    this.setState({ view: 'Deploy', ...product });
-  }
+  setWager(wager) { this.setState({view: 'Deploy', wager}); }
   async deploy() {
-    // const ctc = this.props.acc.deploy(backend);
     const ctc = this.props.acc.contract(backend);
-    this.setState({ view: 'Deploying', ctc });
-    this.product = this.state.product; // UInt
-    this.product.premium = reach.parseCurrency(this.product.premium)
-    this.product.cover = reach.parseCurrency(this.product.cover)
-    this.deadline = { ETH: 10, ALGO: 100, CFX: 1000 }[reach.connector]; // UInt
-    backend.Admin(ctc, this);
+    this.setState({view: 'Deploying', ctc});
+    this.wager = reach.parseCurrency(this.state.wager); // UInt
+    this.deadline = {ETH: 10, ALGO: 100, CFX: 1000}[reach.connector]; // UInt
+    backend.Alice(ctc, this);
     const ctcInfoStr = JSON.stringify(await ctc.getInfo(), null, 2);
-    this.setState({ view: 'WaitingForClient', ctcInfoStr });
+    this.setState({view: 'WaitingForAttacher', ctcInfoStr});
   }
-
-  async activateCover() { // Fun([], UInt)
-    const action = await new Promise(resolveActionP => {
-      this.setState({ view: 'ActivateCover', playable: true, resolveActionP });
-    });
-    this.setState({ view: 'WaitingForClientToTakeAction', action });
-    return actionToInt[action];
-  }
-
-  async approveOrDeclineClaim() { // Fun([], UInt)
-    const action = await new Promise(resolveActionP => {
-      this.setState({ view: 'ApproveOrDeclineClaim', playable: true, resolveActionP });
-    });
-    this.setState({ view: 'WaitingForClaimActionToComplete', action });
-    return actionToInt[action];
-  }
-
-  render() { return renderView(this, AdminViews); }
+  render() { return renderView(this, DeployerViews); }
 }
-
-class Client extends User {
+class Attacher extends Player {
   constructor(props) {
     super(props);
-    this.state = { view: 'Attach' };
+    this.state = {view: 'Attach'};
   }
   attach(ctcInfoStr) {
-    // const ctc = this.props.acc.attach(backend, JSON.parse(ctcInfoStr));
     const ctc = this.props.acc.contract(backend, JSON.parse(ctcInfoStr));
-    this.setState({ view: 'Attaching' });
-    backend.Client(ctc, this);
+    this.setState({view: 'Attaching'});
+    backend.Bob(ctc, this);
   }
-  async acceptAndBuyProduct(premiumAtomic, coverAtomic) { // Fun([UInt], Null)
-    const premium = reach.formatCurrency(premiumAtomic, 4);
-    const cover = reach.formatCurrency(coverAtomic, 4);
+  async acceptWager(wagerAtomic) { // Fun([UInt], Null)
+    const wager = reach.formatCurrency(wagerAtomic, 4);
     return await new Promise(resolveAcceptedP => {
-      this.setState({ view: 'AcceptTerms', premium, cover,resolveAcceptedP });
+      this.setState({view: 'AcceptTerms', wager, resolveAcceptedP});
     });
   }
   termsAccepted() {
     this.state.resolveAcceptedP();
-    this.setState({ view: 'WaitingForInurance' });
+    this.setState({view: 'WaitingForTurn'});
   }
-
-  async claim() { // Fun([], UInt)
-    const action = await new Promise(resolveActionP => {
-      this.setState({ view: 'Claim', playable: true, resolveActionP });
-    });
-    this.setState({ view: 'WaitingForClaimOutcome', action });
-    return actionToInt[action];
-  }
-
-  render() { return renderView(this, ClientViews); }
+  render() { return renderView(this, AttacherViews); }
 }
 
 renderDOM(<App />);
