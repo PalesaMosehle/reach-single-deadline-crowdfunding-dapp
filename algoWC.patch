@@ -10,4 +10,4 @@
 +  providerEnv: 'TestNet', WalletConnect }));
  
  const actionToInt = {'APRROVE': 0, 'WAIT': 1, 'DECLINE': 2};
- const intToOutcome = ['Bob wins!', 'Draw!', 'Alice wins!'];
+ const intToOutcome = ['Bob wins!', 'Draw!', 'FundRaiser wins!'];

@@ -9,7 +9,7 @@ index 4b2705cea..1f5cf01e7 100644
 +reach.setProviderByName('TestNet');
  
  const actionToInt = {'APRROVE': 0, 'WAIT': 1, 'DECLINE': 2};
- const intToOutcome = ['Bob wins!', 'Draw!', 'Alice wins!'];
+ const intToOutcome = ['Bob wins!', 'Draw!', 'FundRaiser wins!'];
 @@ -20,6 +21,7 @@ class App extends React.Component {
    }
    async componentDidMount() {
