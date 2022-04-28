@@ -50,18 +50,40 @@ exports.Attaching = class extends React.Component {
 
 exports.AcceptTerms = class extends React.Component {
   render() {
-    const {wager, standardUnit, parent} = this.props;
+    const {wager, projectNameAtomic, standardUnit, parent} = this.props;
+    const contribution = wager;
     const {disabled} = this.state || {};
+    // const premium = (this.state || {}).premium || defaultProduct.premium;
     return (
       <div>
-        The terms of the game are:
-        <br /> Wager: {wager} {standardUnit}
+        Project Name: {projectNameAtomic}
+        <br />
+        Project Description: project
+        <br />
+        The Terms and Conditions of the project are:
+        <br /> Required Funding Amount: {wager} {standardUnit}
+        <br /> Funds will be send back to the contributors if it doesn't reach : {wager} {standardUnit}
+        <br /> 
+        <br />
+        <br />
+        <div className="row">
+            <div className="col-25">
+              <label>Contribution Amount:({standardUnit})</label>
+            </div>
+            <div className="col-75">
+              <input
+                type='number'
+                placeholder={contribution}
+                onChange={(e) => this.setState({ contribution: e.currentTarget.value })}
+              />
+            </div>
+        </div>
         <br />
         <button
           disabled={disabled}
           onClick={() => {
             this.setState({disabled: true});
-            parent.termsAccepted();
+            parent.termsAccepted(contribution);
           }}
         >Accept terms and pay wager</button>
       </div>

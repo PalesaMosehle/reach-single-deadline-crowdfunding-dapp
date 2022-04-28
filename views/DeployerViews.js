@@ -1,13 +1,13 @@
 import React from 'react';
 import PlayerViews from './PlayerViews';
 
-const exports = {...PlayerViews};
+const exports = { ...PlayerViews };
 
 const sleep = (milliseconds) => new Promise(resolve => setTimeout(resolve, milliseconds));
 
 exports.Wrapper = class extends React.Component {
   render() {
-    const {content} = this.props;
+    const { content } = this.props;
     return (
       <div className="Deployer">
         <h2>Deployer (FundRaiser)</h2>
@@ -19,18 +19,39 @@ exports.Wrapper = class extends React.Component {
 
 exports.SetWager = class extends React.Component {
   render() {
-    const {parent, defaultWager, standardUnit} = this.props;
-    const wager = (this.state || {}).wager || defaultWager;
+    const { parent, defaultWager, standardUnit } = this.props;
+    console.log(parent);
+    const wager = (this.state || {}).wager || defaultWager.contributionAmount;
+    const projectName = (this.state || {}).projectName || defaultWager.projectName;
+    const projectDescription = (this.state || {}).projectDescription || defaultWager.projectDescription;
     return (
       <div>
         <input
+          type='text'
+          placeholder={projectName}
+          onChange={(e) => this.setState({ projectName: e.currentTarget.value })}
+        />
+        <br />
+        <input
+          type='text'
+          placeholder={projectDescription}
+          onChange={(e) => this.setState({ projectDescription: e.currentTarget.value })}
+        />
+        <br />
+        <input
           type='number'
-          placeholder={defaultWager}
-          onChange={(e) => this.setState({wager: e.currentTarget.value})}
+          placeholder={wager}
+          onChange={(e) => this.setState({ wager: e.currentTarget.value })}
         /> {standardUnit}
         <br />
         <button
-          onClick={() => parent.setWager(wager)}
+          onClick={() => parent.setWager({
+            project: {
+              projectName,
+              projectDescription,
+              wager,
+            }
+          })}
         >Set wager</button>
       </div>
     );
@@ -39,7 +60,7 @@ exports.SetWager = class extends React.Component {
 
 exports.Deploy = class extends React.Component {
   render() {
-    const {parent, wager, standardUnit} = this.props;
+    const { parent, wager, standardUnit } = this.props;
     return (
       <div>
         Wager (pay to deploy): <strong>{wager}</strong> {standardUnit}
@@ -62,7 +83,7 @@ exports.Deploying = class extends React.Component {
 
 exports.WaitingForAttacher = class extends React.Component {
   async copyToClipborad(button) {
-    const {ctcInfoStr} = this.props;
+    const { ctcInfoStr } = this.props;
     navigator.clipboard.writeText(ctcInfoStr);
     const origInnerHTML = button.innerHTML;
     button.innerHTML = 'Copied!';
@@ -73,7 +94,7 @@ exports.WaitingForAttacher = class extends React.Component {
   }
 
   render() {
-    const {ctcInfoStr} = this.props;
+    const { ctcInfoStr } = this.props;
     return (
       <div>
         Waiting for Attacher to join...
