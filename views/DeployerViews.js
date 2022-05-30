@@ -127,6 +127,8 @@ exports.CloseOrRefund = class extends React.Component {
           disabled={!playable}
           onClick={() => parent.playHand('ROCK')}
         >Close FundRaising</button>
+        <br />
+        <br />
         <button
           disabled={!playable}
           onClick={() => parent.playHand('SCISSORS')}

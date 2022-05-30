@@ -66,30 +66,21 @@ export const main = Reach.App(() => {
 
     FundRaiser.only(() => {
       const _handFundRaiser = interact.closeOrRefund();
-      const [_commitFundRaiser, _saltFundRaiser] = makeCommitment(interact, _handFundRaiser);
-      const commitFundRaiser = declassify(_commitFundRaiser);
+      const commitFundRaiser = declassify(_handFundRaiser);
     });
     FundRaiser.publish(commitFundRaiser)
       .timeout(relativeTime(deadline), () => closeTo(Bob, informTimeout));
-    commit();
 
-    unknowable(Bob, FundRaiser(_handFundRaiser, _saltFundRaiser));
-    Bob.only(() => {
-      const handBob = declassify(interact.getHand());
-    });
-    Bob.publish(handBob)
-      .timeout(relativeTime(deadline), () => closeTo(FundRaiser, informTimeout));
-    commit();
+    if (commitFundRaiser === B_WINS) {
+      outcome = B_WINS;
+      continue;
+    }
 
-    FundRaiser.only(() => {
-      const saltFundRaiser = declassify(_saltFundRaiser);
-      const handFundRaiser = declassify(_handFundRaiser);
-    });
-    FundRaiser.publish(saltFundRaiser, handFundRaiser)
-      .timeout(relativeTime(deadline), () => closeTo(Bob, informTimeout));
-    checkCommitment(commitFundRaiser, saltFundRaiser, handFundRaiser);
+    if (commitFundRaiser === A_WINS) {
+      outcome = A_WINS;
+      continue;
+    }
 
-    outcome = winner(handFundRaiser, handBob);
     continue;
   }
 
