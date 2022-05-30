@@ -32,7 +32,12 @@ body {
   
   input[type=number] {
     font-size: calc(10px + 2vmin);
-    width: 4em;
+    width: 6em;
+  }
+
+  input[type=text] {
+    font-size: calc(10px + 2vmin);
+    width: 9em;
   }
   
   button {

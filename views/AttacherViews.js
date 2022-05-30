@@ -53,10 +53,12 @@ exports.AcceptTerms = class extends React.Component {
     const {wager, projectNameAtomic, standardUnit, parent} = this.props;
     const contribution = wager;
     const {disabled} = this.state || {};
+    console.log(projectNameAtomic);
+    let result = projectNameAtomic.toString('base64');
     // const premium = (this.state || {}).premium || defaultProduct.premium;
     return (
       <div>
-        Project Name: {projectNameAtomic}
+        Project Name: {result.trim()}
         <br />
         Project Description: project
         <br />
@@ -85,7 +87,7 @@ exports.AcceptTerms = class extends React.Component {
             this.setState({disabled: true});
             parent.termsAccepted(contribution);
           }}
-        >Accept terms and pay wager</button>
+        >Accept terms and pay contribution</button>
       </div>
     );
   }

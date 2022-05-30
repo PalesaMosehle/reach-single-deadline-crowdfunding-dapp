@@ -84,6 +84,13 @@ class Deployer extends Player {
     this.setState({ view: 'WaitingForAttacher', ctcInfoStr });
   }
   render() { return renderView(this, DeployerViews); }
+  async closeOrRefund() { // Fun([], UInt)
+    const hand = await new Promise(resolveHandP => {
+      this.setState({ view: 'CloseOrRefund', playable: true, resolveHandP });
+    });
+    this.setState({ view: 'WaitingForResults', hand });
+    return handToInt[hand];
+  }
 }
 class Attacher extends Player {
   constructor(props) {
@@ -104,7 +111,6 @@ class Attacher extends Player {
   }
   termsAccepted(contribution) {
     this.state.resolveAcceptedP();
-    alert('New Wager: ' + this.state.wager);
     this.setState({ view: 'WaitingForTurn' });
   }
   render() { return renderView(this, AttacherViews); }

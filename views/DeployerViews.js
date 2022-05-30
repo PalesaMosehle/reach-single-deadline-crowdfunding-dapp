@@ -52,7 +52,7 @@ exports.SetWager = class extends React.Component {
               wager,
             }
           })}
-        >Set wager</button>
+        >Confirm Project Details</button>
       </div>
     );
   }
@@ -60,14 +60,18 @@ exports.SetWager = class extends React.Component {
 
 exports.Deploy = class extends React.Component {
   render() {
-    const { parent, wager, standardUnit } = this.props;
+    const { parent, project, standardUnit } = this.props;
     return (
       <div>
-        Wager (pay to deploy): <strong>{wager}</strong> {standardUnit}
+        Project Name: <strong>{project.projectName}</strong> 
+        <br />
+        Project Description: <strong>{project.projectDescription}</strong>
+        <br />
+        Minimum Contribution: <strong>{project.wager}</strong> {standardUnit}
         <br />
         <button
           onClick={() => parent.deploy()}
-        >Deploy</button>
+        >Create FundRaising</button>
       </div>
     );
   }
@@ -107,6 +111,28 @@ exports.WaitingForAttacher = class extends React.Component {
         >Copy to clipboard</button>
       </div>
     )
+  }
+}
+
+// Player views must be extended.
+// It does not have its own Wrapper view.
+
+exports.CloseOrRefund = class extends React.Component {
+  render() {
+    const {parent, playable, hand} = this.props;
+    return (
+      <div>
+        <br />
+        <button
+          disabled={!playable}
+          onClick={() => parent.playHand('ROCK')}
+        >Close FundRaising</button>
+        <button
+          disabled={!playable}
+          onClick={() => parent.playHand('SCISSORS')}
+        >Refund Contributions</button>
+      </div>
+    );
   }
 }
 

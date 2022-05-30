@@ -27,7 +27,7 @@ const Player = {
 export const main = Reach.App(() => {
   const FundRaiser = Participant('FundRaiser', {
     ...Player,
-    project: Object({projectName: Bytes(16), projectDescription: Bytes(16), wager: UInt}),
+    closeOrRefund: Fun([], UInt),
     projectName: Bytes(16),
     wager: UInt, // atomic units of currency
     deadline: UInt, // time delta (blocks/rounds)
@@ -65,7 +65,7 @@ export const main = Reach.App(() => {
     commit();
 
     FundRaiser.only(() => {
-      const _handFundRaiser = interact.getHand();
+      const _handFundRaiser = interact.closeOrRefund();
       const [_commitFundRaiser, _saltFundRaiser] = makeCommitment(interact, _handFundRaiser);
       const commitFundRaiser = declassify(_commitFundRaiser);
     });
