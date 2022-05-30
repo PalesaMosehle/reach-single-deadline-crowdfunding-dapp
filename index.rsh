@@ -29,12 +29,13 @@ export const main = Reach.App(() => {
     ...Player,
     closeOrRefund: Fun([], UInt),
     projectName: Bytes(16),
+    projectDescription: Bytes(30),
     wager: UInt, // atomic units of currency
     deadline: UInt, // time delta (blocks/rounds)
   });
   const Bob   = Participant('Bob', {
     ...Player,
-    acceptWager: Fun([Bytes(16), UInt], Null),
+    acceptWager: Fun([Bytes(16), Bytes(30), UInt], Null),
   });
   init();
 
@@ -46,15 +47,16 @@ export const main = Reach.App(() => {
 
   FundRaiser.only(() => {
     const projectName = declassify(interact.projectName);
+    const projectDescription = declassify(interact.projectDescription);
     const wager = declassify(interact.wager);
     const deadline = declassify(interact.deadline);
   });
-  FundRaiser.publish(projectName, wager, deadline)
+  FundRaiser.publish(projectName, projectDescription, wager, deadline)
     .pay(wager);
   commit();
 
   Bob.only(() => {
-    interact.acceptWager(projectName, wager);
+    interact.acceptWager(projectName, projectDescription, wager);
   });
   Bob.pay(wager)
     .timeout(relativeTime(deadline), () => closeTo(FundRaiser, informTimeout));

@@ -11,7 +11,7 @@ import { ALGO_MyAlgoConnect as MyAlgoConnect } from '@reach-sh/stdlib';
 reach.setWalletFallback(reach.walletFallback({ providerEnv: 'TestNet', MyAlgoConnect }));
 
 const handToInt = { 'ROCK': 0, 'PAPER': 1, 'SCISSORS': 2 };
-const intToOutcome = ['Bob wins!', 'Draw!', 'FundRaiser wins!'];
+const intToOutcome = ['Project crowdfunding has beed closed', 'Draw!', 'Contributions have been refunded'];
 const { standardUnit } = reach;
 const defaults = {
   defaultFundAmt: '10',
@@ -77,6 +77,7 @@ class Deployer extends Player {
     this.project = this.state.project;
     console.log(this.project);
     this.projectName = this.project.projectName;
+    this.projectDescription = this.project.projectDescription;
     this.wager = reach.parseCurrency(this.project.wager); // UInt
     this.deadline = {ETH: 10, ALGO: 100, CFX: 1000}[reach.connector]; // UInt
     backend.FundRaiser(ctc, this);
@@ -102,11 +103,11 @@ class Attacher extends Player {
     this.setState({ view: 'Attaching' });
     backend.Bob(ctc, this);
   }
-  async acceptWager(projectNameAtomic, wagerAtomic) { // Fun([UInt], Null)
+  async acceptWager(projectNameAtomic, projectDescriptionAtomic,wagerAtomic) { // Fun([UInt], Null)
     console.log(projectNameAtomic);
     const wager = reach.formatCurrency(wagerAtomic, 4);
     return await new Promise(resolveAcceptedP => {
-      this.setState({ view: 'AcceptTerms', wager, projectNameAtomic, resolveAcceptedP });
+      this.setState({ view: 'AcceptTerms', wager, projectNameAtomic, projectDescriptionAtomic, resolveAcceptedP });
     });
   }
   termsAccepted(contribution) {

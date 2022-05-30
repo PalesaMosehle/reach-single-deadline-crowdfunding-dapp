@@ -50,7 +50,7 @@ exports.Attaching = class extends React.Component {
 
 exports.AcceptTerms = class extends React.Component {
   render() {
-    const {wager, projectNameAtomic, standardUnit, parent} = this.props;
+    const {wager, projectNameAtomic, projectDescriptionAtomic, standardUnit, parent} = this.props;
     const contribution = wager;
     const {disabled} = this.state || {};
     console.log(projectNameAtomic);
@@ -60,7 +60,7 @@ exports.AcceptTerms = class extends React.Component {
       <div>
         Project Name: {result.trim()}
         <br />
-        Project Description: project
+        Project Description: {projectDescriptionAtomic}
         <br />
         The Terms and Conditions of the project are:
         <br /> Required Funding Amount: {wager} {standardUnit}
@@ -97,8 +97,8 @@ exports.WaitingForTurn = class extends React.Component {
   render() {
     return (
       <div>
-        Waiting for the other player...
-        <br />Think about which move you want to play.
+        Waiting the FundRaiser...
+        <br />The project funding can be accepted of refunded bbased on terms of the fund.
       </div>
     );
   }

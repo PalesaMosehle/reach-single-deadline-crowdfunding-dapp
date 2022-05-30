@@ -46,7 +46,7 @@ exports.Done = class extends React.Component {
     const {outcome} = this.props;
     return (
       <div>
-        Thank you for playing. The outcome of this game was:
+        The outcome of this Growdfunding was:
         <br />{outcome || 'Unknown'}
       </div>
     );
